@@ -1,0 +1,148 @@
+import React, { useState, useEffect } from "react";
+
+// Single-file React app (Tailwind-ready) for a pastel-themed earrings site
+// Exports a default React component App
+
+export default function App() {
+  const [route, setRoute] = useState("home");
+  const [query, setQuery] = useState("");
+  const [selectedBrand, setSelectedBrand] = useState(null);
+  const [reviews, setReviews] = useState(sampleReviews);
+  const [cart, setCart] = useState([]);
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-pink-50 via-white to-purple-50 text-gray-800">
+      <Header route={route} setRoute={setRoute} />
+
+      <main className="max-w-6xl mx-auto px-6 py-8">
+        {route === "home" && (
+          <Home
+            setRoute={setRoute}
+            setSelectedBrand={setSelectedBrand}
+            selectedBrand={selectedBrand}
+          />
+        )}
+
+        {route === "reviews" && (
+          <Reviews
+            reviews={reviews}
+            setReviews={setReviews}
+            query={query}
+            setQuery={setQuery}
+            setSelectedBrand={setSelectedBrand}
+          />
+        )}
+
+        {route === "bio" && <Bio />}
+
+        {route === "designer" && <Designer />}
+
+        {route === "case" && <CaseSimulator />}
+
+        {route === "booking" && <Booking />}
+
+        {route === "brands" && (
+          <BrandHub
+            brands={sampleBrands}
+            setSelectedBrand={setSelectedBrand}
+            setRoute={setRoute}
+          />
+        )}
+
+        {route === "videos" && <VideoHub />}
+      </main>
+
+      <Footer setRoute={setRoute} />
+    </div>
+  );
+}
+
+function Header({ route, setRoute }) {
+  return (
+    <header className="sticky top-0 bg-white/60 backdrop-blur-md border-b border-white/60 z-40">
+      <div className="max-w-6xl mx-auto flex items-center justify-between px-6 py-4">
+        <div className="flex items-center gap-4">
+          <div
+            className="w-12 h-12 rounded-full bg-gradient-to-br from-pink-300 via-purple-200 to-indigo-100 flex items-center justify-center shadow-md cursor-pointer"
+            onClick={() => setRoute("home")}
+          >
+            <span className="text-white font-bold">EC</span>
+          </div>
+          <div>
+            <h1 className="text-xl font-semibold">EarCandy Collective</h1>
+            <p className="text-xs text-gray-500">Yelp for earrings • Custom 3D prints • Booking</p>
+          </div>
+        </div>
+
+        <nav className="flex items-center gap-3">
+          <NavButton active={route === "home"} onClick={() => setRoute("home")}>Home</NavButton>
+          <NavButton active={route === "brands"} onClick={() => setRoute("brands")}>Brands</NavButton>
+          <NavButton active={route === "reviews"} onClick={() => setRoute("reviews")}>Reviews</NavButton>
+          <NavButton active={route === "videos"} onClick={() => setRoute("videos")}>Videos</NavButton>
+          <NavButton active={route === "designer"} onClick={() => setRoute("designer")}>Custom 3D</NavButton>
+          <NavButton active={route === "case"} onClick={() => setRoute("case")}>Case Simulator</NavButton>
+          <NavButton active={route === "booking"} onClick={() => setRoute("booking")}>Booking</NavButton>
+          <button
+            onClick={() => setRoute("bio")}
+            className="ml-2 bg-rose-100 px-3 py-2 rounded-full text-sm shadow-sm hover:scale-105 transition-transform"
+          >
+            Meet the Ear
+          </button>
+        </nav>
+      </div>
+    </header>
+  );
+}
+
+function NavButton({ children, active, onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+        active ? "bg-pink-200 shadow" : "hover:bg-pink-50"
+      }`}
+    >
+      {children}
+    </button>
+  );
+}
+
+function Footer({ setRoute }) {
+  return (
+    <footer className="mt-16 py-10">
+      <div className="max-w-6xl mx-auto text-center text-gray-600">
+        <p>© {new Date().getFullYear()} EarCandy Collective — made with sparkles ✨</p>
+        <div className="mt-4 flex items-center justify-center gap-4">
+          <button onClick={() => setRoute("home")} className="text-sm underline">Home</button>
+          <button onClick={() => setRoute("reviews")} className="text-sm underline">Reviews</button>
+          <button onClick={() => setRoute("booking")} className="text-sm underline">Booking</button>
+        </div>
+      </div>
+    </footer>
+  );
+}
+
+function Home({ setRoute, setSelectedBrand }) {
+  return (
+    <section>
+      <Hero setRoute={setRoute} />
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+        <Card title="Featured Brands" description="Top picks from real reviewers" onClick={() => setRoute("brands")} />
+        <Card title="Custom 3D Earrings" description="Design, print, and wear" onClick={() => setRoute("designer")} />
+        <Card title="Piercing Studio Map" description="Find the best studios near you" onClick={() => setRoute("reviews")} />
+      </div>
+
+      <div className="mt-10 grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <Spotlight title="Earring of the Week" description="Pastel Pearl Drops — trending now" />
+        <Spotlight title="Video Tutorial" description="How to stack 6 piercings gracefully" onWatch={() => setRoute("videos")} />
+        <Spotlight title="Design Your Case" description="Create the pastel case you want" onWatch={() => setRoute("case")} />
+      </div>
+
+      <div className="mt-12">
+        <h2 className="text-2xl font-semibold">Quick Picks</h2>
+        <div className="mt-4 flex gap-3 overflow-auto py-3">
+          {sampleBrands.slice(0, 6).map((b) => (
+            <div key={b.id} className="min-w-[220px] bg-white/80 p-4 rounded-2xl shadow-sm">
+              <h3 className="font-medium">{b.name}</h3>
+              <p className="text-xs text-gray
