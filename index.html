@@ -1,148 +1,379 @@
 import React, { useState, useEffect } from "react";
 
-// Single-file React app (Tailwind-ready) for a pastel-themed earrings site
-// Exports a default React component App
+// CutePastelJewelryShop.jsx
+// Single-file React component for a pastel-themed jewelry site.
+// Tailwind CSS classes are used throughout. Drop into a create-react-app
+// or Next.js app with Tailwind configured.
 
-export default function App() {
-  const [route, setRoute] = useState("home");
-  const [query, setQuery] = useState("");
-  const [selectedBrand, setSelectedBrand] = useState(null);
-  const [reviews, setReviews] = useState(sampleReviews);
-  const [cart, setCart] = useState([]);
+export default function CutePastelJewelryShop() {
+  // --- sample product data ---
+  const initialProducts = [
+    { id: 1, name: "Spring Blossom Hoops", category: "seasonal", type: "earrings", price: 12, color: "peach" },
+    { id: 2, name: "Mood Bracelet - Pastel Mix", category: "signature", type: "bracelet", price: 18, color: "mint" },
+    { id: 3, name: "Luna Necklace", category: "signature", type: "necklace", price: 20, color: "lavender" },
+    { id: 4, name: "Autumn Leaf Keychain", category: "seasonal", type: "keychain", price: 8, color: "cream" },
+    { id: 5, name: "Starry Studs", category: "signature", type: "earrings", price: 10, color: "sky" },
+  ];
 
+  const [products] = useState(initialProducts);
+
+  // --- Design-your-own state ---
+  const [design, setDesign] = useState({
+    type: "earrings",
+    metal: "gold",
+    mainColor: "#F6D6E0",
+    charm: "star",
+    name: "My Cute Pair",
+  });
+
+  // --- Cart & shop filters ---
+  const [cart, setCart] = useState(() => JSON.parse(localStorage.getItem("cute_cart")) || []);
+  const [filter, setFilter] = useState("all");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+
+  // --- Reservation (locker) state ---
+  const [lockerReservations, setLockerReservations] = useState(() => JSON.parse(localStorage.getItem("locker_reservations")) || []);
+  const [reservation, setReservation] = useState({ lockerNumber: "", selections: [] });
+
+  // --- About / team experiments ---
+  const team = [
+    { name: "Em", role: "Founder & Maker", experiment: "I started with tiny studs and learned to dye resin — now my colors glow!" },
+    { name: "Lia", role: "Designer", experiment: "I fell in love with asymmetry — one earring bigger than the other tells a story." },
+    { name: "Noa", role: "Shop & Shipping", experiment: "I tested hundreds of packaging ideas; tissue and a sticker make people smile most." },
+  ];
+
+  // Persist cart & reservations
+  useEffect(() => {
+    localStorage.setItem("cute_cart", JSON.stringify(cart));
+  }, [cart]);
+
+  useEffect(() => {
+    localStorage.setItem("locker_reservations", JSON.stringify(lockerReservations));
+  }, [lockerReservations]);
+
+  // --- handlers ---
+  function updateDesign(key, value) {
+    setDesign((d) => ({ ...d, [key]: value }));
+  }
+
+  function addToCart(product) {
+    setCart((c) => [...c, product]);
+  }
+
+  function removeFromCart(index) {
+    setCart((c) => c.filter((_, i) => i !== index));
+  }
+
+  function handleReservationAdd() {
+    if (!reservation.lockerNumber) return alert("Please pick a locker number");
+    if (reservation.selections.length === 0) return alert("Pick at least one item for the locker");
+
+    const newRes = { ...reservation, id: Date.now() };
+    setLockerReservations((r) => [...r, newRes]);
+    setReservation({ lockerNumber: "", selections: [] });
+    alert("Reservation saved to locker system — hooray!");
+  }
+
+  function toggleSelectionForReservation(productId) {
+    setReservation((r) => {
+      const has = r.selections.includes(productId);
+      return {
+        ...r,
+        selections: has ? r.selections.filter((id) => id !== productId) : [...r.selections, productId],
+      };
+    });
+  }
+
+  // --- Design preview as an SVG ---
+  function DesignPreview({ spec }) {
+    const { mainColor, metal, charm } = spec;
+    const metalFill = metal === "gold" ? "#D4AF37" : metal === "silver" ? "#C0C0C0" : "#B87333";
+
+    return (
+      <svg width="120" height="120" viewBox="0 0 120 120" className="rounded-xl shadow-md">
+        <rect x="0" y="0" width="120" height="120" rx="12" fill="#fff" />
+        <g transform="translate(20,20)">
+          <circle cx="40" cy="40" r="18" fill={mainColor} stroke={metalFill} strokeWidth="2" />
+          <text x="40" y="44" textAnchor="middle" fontSize="10" fill="#333">{charm}</text>
+        </g>
+      </svg>
+    );
+  }
+
+  // --- Filters for shop display ---
+  const displayed = products.filter((p) => (filter === "all" ? true : p.type === filter)).filter((p) => (categoryFilter === "all" ? true : p.category === categoryFilter));
+
+  // --- UI ---
   return (
-    <div className="min-h-screen bg-gradient-to-b from-pink-50 via-white to-purple-50 text-gray-800">
-      <Header route={route} setRoute={setRoute} />
+    <div className="min-h-screen bg-gradient-to-b from-pink-50 via-rose-50 to-sky-50 text-gray-800">
+      <header className="max-w-6xl mx-auto p-6 flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-extrabold tracking-tight">Pastel Trinket Co.</h1>
+          <p className="text-sm opacity-80">Tiny treasures, big smiles — customizable & cozy.</p>
+        </div>
+        <nav className="space-x-4">
+          <a href="#design" className="text-sm p-2 rounded-md hover:bg-white/50">Design</a>
+          <a href="#shop" className="text-sm p-2 rounded-md hover:bg-white/50">Shop</a>
+          <a href="#reserve" className="text-sm p-2 rounded-md hover:bg-white/50">Reserve Locker</a>
+          <a href="#about" className="text-sm p-2 rounded-md hover:bg-white/50">About</a>
+        </nav>
+      </header>
 
-      <main className="max-w-6xl mx-auto px-6 py-8">
-        {route === "home" && (
-          <Home
-            setRoute={setRoute}
-            setSelectedBrand={setSelectedBrand}
-            selectedBrand={selectedBrand}
-          />
-        )}
+      <main className="max-w-6xl mx-auto p-6 space-y-10">
+        {/* 1) Design-your-own section */}
+        <section id="design" className="bg-white/80 rounded-2xl p-6 shadow-lg">
+          <h2 className="text-2xl font-bold">Design Your Own Earrings (or jewelry!)</h2>
+          <p className="mt-1 text-sm opacity-80">Playful builder — pick a style, color, metal and charm. Save or add to cart!</p>
 
-        {route === "reviews" && (
-          <Reviews
-            reviews={reviews}
-            setReviews={setReviews}
-            query={query}
-            setQuery={setQuery}
-            setSelectedBrand={setSelectedBrand}
-          />
-        )}
+          <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="space-y-4">
+              <label className="block text-sm">Type</label>
+              <select value={design.type} onChange={(e) => updateDesign("type", e.target.value)} className="w-full rounded-md p-2">
+                <option value="earrings">Earrings</option>
+                <option value="bracelet">Bracelet</option>
+                <option value="necklace">Necklace</option>
+                <option value="keychain">Keychain</option>
+              </select>
 
-        {route === "bio" && <Bio />}
+              <label className="block text-sm">Metal</label>
+              <select value={design.metal} onChange={(e) => updateDesign("metal", e.target.value)} className="w-full rounded-md p-2">
+                <option value="gold">Gold</option>
+                <option value="silver">Silver</option>
+                <option value="bronze">Bronze</option>
+              </select>
 
-        {route === "designer" && <Designer />}
+              <label className="block text-sm">Charm</label>
+              <select value={design.charm} onChange={(e) => updateDesign("charm", e.target.value)} className="w-full rounded-md p-2">
+                <option value="star">Star</option>
+                <option value="heart">Heart</option>
+                <option value="moon">Moon</option>
+                <option value="flower">Flower</option>
+              </select>
 
-        {route === "case" && <CaseSimulator />}
+              <label className="block text-sm">Name your design</label>
+              <input value={design.name} onChange={(e) => updateDesign("name", e.target.value)} className="w-full rounded-md p-2" />
 
-        {route === "booking" && <Booking />}
+              <label className="block text-sm">Pick main color</label>
+              <input type="color" value={design.mainColor} onChange={(e) => updateDesign("mainColor", e.target.value)} className="w-full h-10 p-0" />
 
-        {route === "brands" && (
-          <BrandHub
-            brands={sampleBrands}
-            setSelectedBrand={setSelectedBrand}
-            setRoute={setRoute}
-          />
-        )}
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    const customProduct = { id: Date.now(), name: design.name, category: "custom", type: design.type, price: 24, color: design.mainColor };
+                    addToCart(customProduct);
+                    alert("Design added to cart — so precious!");
+                  }}
+                  className="mt-2 inline-block py-2 px-4 rounded-lg bg-pink-200 hover:bg-pink-300 font-semibold">
+                  Add to Cart
+                </button>
 
-        {route === "videos" && <VideoHub />}
+                <button
+                  onClick={() => {
+                    const sample = { ...design };
+                    const name = prompt("Save this design name?", sample.name) || sample.name;
+                    localStorage.setItem(`design_${Date.now()}`, JSON.stringify({ ...sample, name }));
+                    alert("Design saved locally — view in browser storage!");
+                  }}
+                  className="mt-2 inline-block py-2 px-4 rounded-lg bg-sky-100 hover:bg-sky-200 font-semibold">
+                  Save Design
+                </button>
+              </div>
+            </div>
+
+            <div className="md:col-span-2 flex items-center justify-center">
+              <div className="bg-gradient-to-br from-pink-50 to-sky-50 p-6 rounded-xl flex items-center gap-6">
+                <div>
+                  <DesignPreview spec={design} />
+                </div>
+
+                <div>
+                  <h3 className="font-bold">{design.name}</h3>
+                  <p className="text-sm opacity-80">{design.type} • {design.metal} • {design.charm}</p>
+                  <p className="mt-3 text-sm">Tip: try contrasting colors for a bold pastel statement!</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* 2) Shop / Buy your own earrings (with seasonal & signature and more types) */}
+        <section id="shop" className="bg-white/80 rounded-2xl p-6 shadow-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold">Shop our Collections</h2>
+              <p className="text-sm opacity-80">Seasonal drops, signature lines, and more — we also carry bracelets, necklaces, and keychains.</p>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <select value={filter} onChange={(e) => setFilter(e.target.value)} className="rounded-md p-2">
+                <option value="all">All types</option>
+                <option value="earrings">Earrings</option>
+                <option value="bracelet">Bracelets</option>
+                <option value="necklace">Necklaces</option>
+                <option value="keychain">Keychains</option>
+              </select>
+
+              <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)} className="rounded-md p-2">
+                <option value="all">All collections</option>
+                <option value="seasonal">Seasonal</option>
+                <option value="signature">Signature</option>
+                <option value="custom">Custom</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+            {displayed.map((p) => (
+              <div key={p.id} className="bg-white rounded-xl p-4 shadow-sm">
+                <div className="h-40 rounded-md bg-gradient-to-tr from-white to-gray-50 flex items-center justify-center">
+                  <div className="text-center">
+                    <div className="text-sm opacity-70">{p.category.toUpperCase()}</div>
+                    <div className="font-bold text-lg">{p.name}</div>
+                    <div className="text-xs opacity-70">{p.type}</div>
+                  </div>
+                </div>
+
+                <div className="mt-4 flex justify-between items-center">
+                  <div>
+                    <div className="text-sm font-medium">${p.price}</div>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <button onClick={() => addToCart(p)} className="px-3 py-1 rounded-lg bg-rose-100 hover:bg-rose-200">Add</button>
+                    <button onClick={() => alert(`Quick view: ${p.name}`)} className="px-3 py-1 rounded-lg bg-sky-50">View</button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-6 bg-pink-50 p-4 rounded-lg">
+            <h3 className="font-bold">Your Cart ({cart.length})</h3>
+            <div className="mt-2">
+              {cart.length === 0 ? <div className="text-sm opacity-70">Your cart is cozy and empty — go design something!</div> : (
+                <div className="space-y-2">
+                  {cart.map((c, i) => (
+                    <div key={i} className="flex items-center justify-between bg-white p-2 rounded-md">
+                      <div>
+                        <div className="font-medium">{c.name}</div>
+                        <div className="text-xs opacity-70">{c.type} • ${c.price}</div>
+                      </div>
+                      <div className="flex gap-2">
+                        <button onClick={() => removeFromCart(i)} className="px-2 py-1 rounded-md bg-gray-100">Remove</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+
+        {/* 3 & 4) Reservation / Locker section */}
+        <section id="reserve" className="bg-white/80 rounded-2xl p-6 shadow-lg">
+          <h2 className="text-2xl font-bold">Reserve a Locker Pickup</h2>
+          <p className="text-sm opacity-80">Choose your locker number and which items you want us to place inside. Simple & secure.</p>
+
+          <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="space-y-4">
+              <label className="block text-sm">Locker Number</label>
+              <input value={reservation.lockerNumber} onChange={(e) => setReservation((r) => ({ ...r, lockerNumber: e.target.value }))} className="w-full rounded-md p-2" placeholder="e.g., 12A" />
+
+              <div className="text-sm">Pick items to go into the locker:</div>
+              <div className="max-h-40 overflow-auto border rounded-md p-2 bg-white">
+                {products.map((p) => (
+                  <label key={p.id} className="flex items-center gap-2 py-1">
+                    <input type="checkbox" checked={reservation.selections.includes(p.id)} onChange={() => toggleSelectionForReservation(p.id)} />
+                    <span className="text-sm">{p.name} ({p.type})</span>
+                  </label>
+                ))}
+              </div>
+
+              <button onClick={handleReservationAdd} className="mt-3 px-4 py-2 rounded-lg bg-emerald-100 hover:bg-emerald-200">Save Reservation</button>
+            </div>
+
+            <div className="md:col-span-2">
+              <h3 className="font-bold">Locker Overview</h3>
+              <p className="text-sm opacity-70">Saved locks & what we’ll put inside — stored locally in your browser for demo.</p>
+
+              <div className="mt-4 space-y-3">
+                {lockerReservations.length === 0 ? <div className="text-sm opacity-70">No reservations yet — yours could be the first!</div> : lockerReservations.map((r) => (
+                  <div key={r.id} className="bg-white p-3 rounded-md shadow-sm">
+                    <div className="flex justify-between items-center">
+                      <div className="font-medium">Locker {r.lockerNumber}</div>
+                      <div className="text-xs opacity-70">{new Date(r.id).toLocaleString()}</div>
+                    </div>
+                    <div className="mt-2 text-sm">
+                      {r.selections.map((id) => {
+                        const p = products.find((x) => x.id === id);
+                        return <div key={id} className="text-sm">• {p ? p.name : "(custom item)"}</div>;
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* 5) About section with personal experiments */}
+        <section id="about" className="bg-white/80 rounded-2xl p-6 shadow-lg">
+          <h2 className="text-2xl font-bold">About Us & Our Jewelry Journeys</h2>
+          <p className="text-sm opacity-80">Meet the folks who dreamed up these pastel treasures. Everyone has a short 'experiment' they tried during their making journey.</p>
+
+          <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+            {team.map((m) => (
+              <div key={m.name} className="bg-pink-50 rounded-xl p-4">
+                <div className="font-bold text-lg">{m.name}</div>
+                <div className="text-sm opacity-70">{m.role}</div>
+                <div className="mt-3 text-sm">{m.experiment}</div>
+
+                <div className="mt-3">
+                  <button onClick={() => alert(`${m.name} says: \n\n${m.experiment}`)} className="px-3 py-1 rounded-md bg-rose-100">Hear more</button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-6 bg-sky-50 p-4 rounded-md">
+            <h3 className="font-bold">Want to share your experiment?</h3>
+            <p className="text-sm opacity-70">Visitors can add a short note about their jewelry journey — it’s stored locally as a demo.</p>
+            <ShareExperiment />
+          </div>
+        </section>
+
+        <footer className="text-center p-6 text-sm opacity-70">Made with pastel dreams 🌸 • Demo site — link this file into a React + Tailwind project to deploy.</footer>
       </main>
-
-      <Footer setRoute={setRoute} />
     </div>
   );
 }
 
-function Header({ route, setRoute }) {
-  return (
-    <header className="sticky top-0 bg-white/60 backdrop-blur-md border-b border-white/60 z-40">
-      <div className="max-w-6xl mx-auto flex items-center justify-between px-6 py-4">
-        <div className="flex items-center gap-4">
-          <div
-            className="w-12 h-12 rounded-full bg-gradient-to-br from-pink-300 via-purple-200 to-indigo-100 flex items-center justify-center shadow-md cursor-pointer"
-            onClick={() => setRoute("home")}
-          >
-            <span className="text-white font-bold">EC</span>
-          </div>
-          <div>
-            <h1 className="text-xl font-semibold">EarCandy Collective</h1>
-            <p className="text-xs text-gray-500">Yelp for earrings • Custom 3D prints • Booking</p>
-          </div>
-        </div>
+function ShareExperiment() {
+  const [note, setNote] = useState("");
+  const [saved, setSaved] = useState(() => JSON.parse(localStorage.getItem("experiments")) || []);
 
-        <nav className="flex items-center gap-3">
-          <NavButton active={route === "home"} onClick={() => setRoute("home")}>Home</NavButton>
-          <NavButton active={route === "brands"} onClick={() => setRoute("brands")}>Brands</NavButton>
-          <NavButton active={route === "reviews"} onClick={() => setRoute("reviews")}>Reviews</NavButton>
-          <NavButton active={route === "videos"} onClick={() => setRoute("videos")}>Videos</NavButton>
-          <NavButton active={route === "designer"} onClick={() => setRoute("designer")}>Custom 3D</NavButton>
-          <NavButton active={route === "case"} onClick={() => setRoute("case")}>Case Simulator</NavButton>
-          <NavButton active={route === "booking"} onClick={() => setRoute("booking")}>Booking</NavButton>
-          <button
-            onClick={() => setRoute("bio")}
-            className="ml-2 bg-rose-100 px-3 py-2 rounded-full text-sm shadow-sm hover:scale-105 transition-transform"
-          >
-            Meet the Ear
-          </button>
-        </nav>
+  function addNote() {
+    if (!note.trim()) return alert("Write something sweet!");
+    const newNote = { id: Date.now(), text: note };
+    const next = [newNote, ...saved].slice(0, 10);
+    setSaved(next);
+    localStorage.setItem("experiments", JSON.stringify(next));
+    setNote("");
+  }
+
+  return (
+    <div className="mt-3">
+      <textarea value={note} onChange={(e) => setNote(e.target.value)} className="w-full rounded-md p-2" placeholder="Tell us about your jewelry experiment (e.g., first resin pour!)" rows={3} />
+      <div className="flex gap-2 mt-2">
+        <button onClick={addNote} className="px-3 py-1 rounded-md bg-emerald-100">Share</button>
       </div>
-    </header>
+
+      <div className="mt-3 space-y-2">
+        {saved.map((s) => (
+          <div key={s.id} className="bg-white p-2 rounded-md text-sm">{s.text}</div>
+        ))}
+      </div>
+    </div>
   );
 }
 
-function NavButton({ children, active, onClick }) {
-  return (
-    <button
-      onClick={onClick}
-      className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-        active ? "bg-pink-200 shadow" : "hover:bg-pink-50"
-      }`}
-    >
-      {children}
-    </button>
-  );
-}
-
-function Footer({ setRoute }) {
-  return (
-    <footer className="mt-16 py-10">
-      <div className="max-w-6xl mx-auto text-center text-gray-600">
-        <p>© {new Date().getFullYear()} EarCandy Collective — made with sparkles ✨</p>
-        <div className="mt-4 flex items-center justify-center gap-4">
-          <button onClick={() => setRoute("home")} className="text-sm underline">Home</button>
-          <button onClick={() => setRoute("reviews")} className="text-sm underline">Reviews</button>
-          <button onClick={() => setRoute("booking")} className="text-sm underline">Booking</button>
-        </div>
-      </div>
-    </footer>
-  );
-}
-
-function Home({ setRoute, setSelectedBrand }) {
-  return (
-    <section>
-      <Hero setRoute={setRoute} />
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-        <Card title="Featured Brands" description="Top picks from real reviewers" onClick={() => setRoute("brands")} />
-        <Card title="Custom 3D Earrings" description="Design, print, and wear" onClick={() => setRoute("designer")} />
-        <Card title="Piercing Studio Map" description="Find the best studios near you" onClick={() => setRoute("reviews")} />
-      </div>
-
-      <div className="mt-10 grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <Spotlight title="Earring of the Week" description="Pastel Pearl Drops — trending now" />
-        <Spotlight title="Video Tutorial" description="How to stack 6 piercings gracefully" onWatch={() => setRoute("videos")} />
-        <Spotlight title="Design Your Case" description="Create the pastel case you want" onWatch={() => setRoute("case")} />
-      </div>
-
-      <div className="mt-12">
-        <h2 className="text-2xl font-semibold">Quick Picks</h2>
-        <div className="mt-4 flex gap-3 overflow-auto py-3">
-          {sampleBrands.slice(0, 6).map((b) => (
-            <div key={b.id} className="min-w-[220px] bg-white/80 p-4 rounded-2xl shadow-sm">
-              <h3 className="font-medium">{b.name}</h3>
-              <p className="text-xs text-gray
